@@ -68,7 +68,92 @@ histogram (temp(~isnan(temp)), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normaliza
 xgrid = linspace(0,1.7,1000)';
 hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 
+%% Statistical description of mu, w, sigma & Plot GMM and data
+%% mu & weights
+% 1st approach
 
+variable = 1;
+% Create vectors
+all_mu = GMModel{1}.mu(:,variable);
+all_weights =  GMModel{1}.ComponentProportion.';
+for i=2:length(GMModel) %2-215
+    all_mu = [all_mu ; GMModel{i}.mu(:,variable)];
+    all_weights = [all_weights ; GMModel{i}.ComponentProportion.'];
+end
+
+% Fit GMM to mu and weight arrays
+GM_all_mu = fitgmdist (all_mu, 3);
+% rand_all_mu = random(GM_all_mu,415);
+% h_all_mu = kstest2(all_mu,rand_all_mu)
+
+GM_all_weights = fitgmdist (all_weights,3);
+% rand_all_weights = random(GM_all_weights,415);
+% h_all_weights = kstest2(all_weights,rand_all_weights)
+
+% Plot gmm and data
+figure;
+if (variable == 2)
+    histogram (all_mu, 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf'  );
+    xgrid = linspace(0,120,1000)';
+    hold on; plot(xgrid,pdf(GM_all_mu,xgrid),'r-'); hold off
+    figure;
+    histogram (all_weights, 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf'  );
+    xgrid = linspace(-0.1,1.8,1000)';
+    hold on; plot(xgrid,pdf(GM_all_weights,xgrid),'r-'); hold off
+else
+    histogram (all_mu, 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+    xgrid = linspace(0,1.8,1000)';
+    hold on; plot(xgrid,pdf(GM_all_mu,xgrid),'r-'); hold off
+    figure;
+    histogram (all_weights, 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+    xgrid = linspace(-0.1,1.8,1000)';
+    hold on; plot(xgrid,pdf(GM_all_weights,xgrid),'r-'); hold off
+end
+
+%% 2nd approach
+variable = 1;
+% Create matrixes
+for i=1:length(GMModel) %1-215
+    mu_mat(i,:) = GMModel{i}.mu(:,variable);
+    weight_mat (i, :) = GMModel{i}.ComponentProportion;
+end
+
+% Sort mu_mat and fix index pairs for weight_mat
+[s_mu_mat s_mu_idx] = sort(mu_mat,2);
+% Keep same index for weights
+for i=1:size(weight_mat, 1) %1-215
+    for j=1:size(weight_mat, 2) %1-5
+        s_weight_mat(i,j) = weight_mat(i,s_mu_idx(i,j));
+    end
+end
+
+% Fit GMM to mu and weight matrixes
+for i=1:size(s_mu_mat,2)    %1-5
+    GM_s_mu_mat{i} = fitgmdist (s_mu_mat(:,i) , 3, 'SharedCovariance',true);
+    GM_s_weight_mat{i} = fitgmdist (s_weight_mat(:,i) , 3, 'SharedCovariance',true);
+end
+
+% Plot gmm and data
+for i=1:size(mu_mat,2)  %1-5
+    figure;
+    if (variable == 2)
+        histogram (s_mu_mat(:,i), 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf' );
+        xgrid = linspace(0,120,1000)';
+        hold on; plot(xgrid,pdf(GM_s_mu_mat{i},xgrid),'r-'); hold off
+        figure;
+        histogram (s_weight_mat(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+        xgrid = linspace(0,1.8,1000)';
+        hold on; plot(xgrid,pdf(GM_s_weight_mat{i},xgrid),'r-'); hold off
+    else
+        histogram (s_mu_mat(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+        xgrid = linspace(0,1.8,1000)';
+        hold on; plot(xgrid,pdf(GM_s_mu_mat{i},xgrid),'r-'); hold off
+        figure;
+        histogram (s_weight_mat(:, i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+        xgrid = linspace(0,1.8,1000)';
+        hold on; plot(xgrid,pdf(GM_s_weight_mat{i},xgrid),'r-'); hold off
+    end
+end
 
 %% First plots of data
 %% Plots
