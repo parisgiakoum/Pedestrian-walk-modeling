@@ -69,6 +69,35 @@ xgrid = linspace(0,1.7,1000)';
 hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 
 %% Statistical description of mu, w, sigma & Plot GMM and data
+%% Sigma
+% 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
+SigmaValues = [diag(GMModel{1}.Sigma).'  GMModel{1}.Sigma(1,2)  GMModel{1}.Sigma(1,3)  GMModel{1}.Sigma(2,3)];
+for i=2:length(GMModel)
+   SigmaValues = [SigmaValues ; diag(GMModel{i}.Sigma).' GMModel{i}.Sigma(1,2)  GMModel{i}.Sigma(1,3)  GMModel{i}.Sigma(2,3)];
+end
+
+for i=1:size(SigmaValues, 2)
+    GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 4, 'SharedCovariance',true);
+%   rand_sigma_val(:,i) = random(GMModelSigma{i},415);
+% 	h_sigma(i) = kstest2(SigmaValues(:,i),rand_sigma_val(:,i))
+
+    figure;
+    if i==1 | i==3 | i==5
+        histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
+        xgrid = linspace(-0.1,0.08,1000)';
+        hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
+    elseif i==2
+        histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
+        xgrid = linspace(-0.1,20,1000)';
+        hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
+    else
+        histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
+        xgrid = linspace(-0.35,0.5,1000)';
+        hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
+    end
+    
+end
+
 %% mu & weights
 % 1st approach
 
