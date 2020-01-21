@@ -16,6 +16,28 @@ database = clearDb(database);
 %% GMMs for each subject
 [GMModel, h] = fitGMMtoData(X, 5);
 
+%% Simulator
+%% Generate random parameters for the GMM
+% Random Sigma
+[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel);
+
+for i=1:length(GMModelSigma)
+    randomSigmaValues(i) = random(GMModelSigma{i},1);
+end
+
+randomSigma = diag(randomSigmaValues(1:3));
+randomSigma(1,2) = randomSigmaValues(4); randomSigma(2,1) = randomSigmaValues(4);
+randomSigma(1,3) = randomSigmaValues(5); randomSigma(3,1) = randomSigmaValues(5);
+randomSigma(2,3) = randomSigmaValues(6); randomSigma(3,2) = randomSigmaValues(6);
+
+% Random w, mu
+[GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, 1);
+
+for i=1:length(GM_s_weight_mat) % 1-5
+    randomWeightValues(i) = random(GM_s_weight_mat{i},1);
+    randomMuValues(i) = random(GM_s_mu_mat{i},1);
+end
+
 %% Try plotting gmm and data
 %% Time
 i=1;
