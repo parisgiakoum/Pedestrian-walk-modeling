@@ -52,7 +52,15 @@ for variable=2:3
     randomMu(:, variable) = randomMuValues.';
 end
 
-%% Try plotting gmm and data
+%% Fit GMM to new parameters
+simulatedGMM = gmdistribution(randomMu, randomSigma, randomWeight);
+
+generatedRandomWalk = random(simulatedGMM, 50);
+
+
+
+
+%% Plotting GMM and data
 %% Time
 i=1;
 
@@ -89,7 +97,7 @@ hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 % 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
 [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel);
 
-for i=1:size(SigmaValues, 2)
+for i=1:size(SigmaValues, 2) % 1-6
 %   rand_sigma_val(:,i) = random(GMModelSigma{i},415);
 % 	h_sigma(i) = kstest2(SigmaValues(:,i),rand_sigma_val(:,i))
 
@@ -156,7 +164,7 @@ variable = 1;
 [GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, variable);
 
 % Plot gmm and data
-for i=1:size(mu_mat,2)  %1-5
+for i=1:size(s_mu_mat,2)  %1-5
     figure;
     if (variable == 2)
         histogram (s_mu_mat(:,i), 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf' );
