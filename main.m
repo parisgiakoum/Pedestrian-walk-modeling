@@ -38,6 +38,20 @@ for i=1:length(GM_s_weight_mat) % 1-5
     randomMuValues(i) = random(GM_s_mu_mat{i},1);
 end
 
+% Weight needs to sum to 1, so the gap to 1 will be equally distributed
+dif = (1-sum(randomWeightValues))/length(GM_s_weight_mat);
+randomWeight = randomWeightValues + dif;
+
+% Random mu
+randomMu(:, 1) = randomMuValues.';
+for variable=2:3
+    [GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, variable);
+    for i=1:length(GM_s_mu_mat) % 1-5
+        randomMuValues(i) = random(GM_s_mu_mat{i},1);
+    end
+    randomMu(:, variable) = randomMuValues.';
+end
+
 %% Try plotting gmm and data
 %% Time
 i=1;
