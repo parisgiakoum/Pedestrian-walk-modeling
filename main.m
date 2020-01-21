@@ -11,6 +11,8 @@ database = clearDb(database);
 
 [time,force, x_coord, y_coord] = retrieveAllVariables(database);
 
+[X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coord, y_coord);
+
 %% First plots of data
 %% Plots
 % plot force-time measurements of a subject (j) in one plot
