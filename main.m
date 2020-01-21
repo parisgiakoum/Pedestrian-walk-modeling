@@ -3,7 +3,7 @@ clear all;
 close all;
 clc;
 
-%% Retrieve force-time measurements and find meanF-Dt for each step of each subject
+%% Clear junk, retrieve force-time-position measurements and find meanF-Dt-length-angle for each step of each subject
 
 database=load('steps_database').database_passi;
 
@@ -13,29 +13,8 @@ database = clearDb(database);
 
 [X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coord, y_coord);
 
-%% GM model
-for i=1:size(X,3)   %1-215
-    temp = X(:,1:3,i);
-
-    GMModel{i} = fitgmdist (temp(any(~isnan(temp), 2), :), 5, 'SharedCovariance',true);
-  
-    Y = random(GMModel{i},415);
-
-    T = X(:,1,i);
-    F = X(:,2,i);
-    L = X(:,3,i);
-    TSim=Y(:,1);             
-    FSim=Y(:,2);
-    LSim=Y(:,3);
-
-    h1(i)=kstest2(T,TSim);
-    h2(i)=kstest2(F,FSim);
-    h3(i)=kstest2(L,LSim);
-end
-
-h=[h1; h2; h3];
-% sum(h==1,'all')
-clear h1 h2 h3 T F L TSim FSim LSim
+%% GMMs for each subject
+[GMModel, h] = fitGMMtoData(X, 5);
 
 %% Try plotting gmm and data
 %% Time
@@ -68,16 +47,13 @@ histogram (temp(~isnan(temp)), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normaliza
 xgrid = linspace(0,1.7,1000)';
 hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 
+
 %% Statistical description of mu, w, sigma & Plot GMM and data
 %% Sigma
 % 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
-SigmaValues = [diag(GMModel{1}.Sigma).'  GMModel{1}.Sigma(1,2)  GMModel{1}.Sigma(1,3)  GMModel{1}.Sigma(2,3)];
-for i=2:length(GMModel)
-   SigmaValues = [SigmaValues ; diag(GMModel{i}.Sigma).' GMModel{i}.Sigma(1,2)  GMModel{i}.Sigma(1,3)  GMModel{i}.Sigma(2,3)];
-end
+[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel);
 
 for i=1:size(SigmaValues, 2)
-    GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 4, 'SharedCovariance',true);
 %   rand_sigma_val(:,i) = random(GMModelSigma{i},415);
 % 	h_sigma(i) = kstest2(SigmaValues(:,i),rand_sigma_val(:,i))
 
@@ -141,26 +117,7 @@ end
 
 %% 2nd approach
 variable = 1;
-% Create matrixes
-for i=1:length(GMModel) %1-215
-    mu_mat(i,:) = GMModel{i}.mu(:,variable);
-    weight_mat (i, :) = GMModel{i}.ComponentProportion;
-end
-
-% Sort mu_mat and fix index pairs for weight_mat
-[s_mu_mat s_mu_idx] = sort(mu_mat,2);
-% Keep same index for weights
-for i=1:size(weight_mat, 1) %1-215
-    for j=1:size(weight_mat, 2) %1-5
-        s_weight_mat(i,j) = weight_mat(i,s_mu_idx(i,j));
-    end
-end
-
-% Fit GMM to mu and weight matrixes
-for i=1:size(s_mu_mat,2)    %1-5
-    GM_s_mu_mat{i} = fitgmdist (s_mu_mat(:,i) , 3, 'SharedCovariance',true);
-    GM_s_weight_mat{i} = fitgmdist (s_weight_mat(:,i) , 3, 'SharedCovariance',true);
-end
+[GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, variable);
 
 % Plot gmm and data
 for i=1:size(mu_mat,2)  %1-5
@@ -183,6 +140,7 @@ for i=1:size(mu_mat,2)  %1-5
         hold on; plot(xgrid,pdf(GM_s_weight_mat{i},xgrid),'r-'); hold off
     end
 end
+
 
 %% First plots of data
 %% Plots
