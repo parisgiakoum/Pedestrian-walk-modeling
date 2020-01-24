@@ -5,7 +5,7 @@
 %
 %%% Returns %%%
 %%%
-% X: 32x4x215 (steps x Dt-MeanF-length-phi x subjects)
+% X: 32x4x215 (steps x Dt-MeanF-length-angle x subjects)
 % Mean force, interarrival time, length and angle of each step for each
 % person in one matrix. For each person(represented in the 3rd dimension),
 % 1st column represents the Dt, 2nd column is the meanF, 3rd column is the
@@ -20,10 +20,10 @@
 % len: 215x32 (subjects x steps)
 % The euclidian distance between both hills (two points) on each step
 %%%
-% phi: 215x32 (subjects x steps)
+% angle: 215x32 (subjects x steps)
 % The angle of each step along the gait horizontal direction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coord, y_coord)
+function [X, Dt,meanF, len, angle] = computeAllDesiredVariables(force, time, x_coord, y_coord)
     
      for i=1:size(time,3) % All subjects
         meanTime(i,:) = nanmean(time(:,:,i));   % Compute mean time for each step excluding nan values
@@ -32,22 +32,22 @@ function [X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coo
         % meanF is the mean force for each step excluding nan values
         meanF(i,:) = nanmean(force(:,:,i));
         
-        % Init Dt, length, phi
+        % Init Dt, length, angle
         Dt(i,1) = nan;  % Dt1 cannot be computed
         len(i,1) = nan;   % length1 cannot be computed
-        phi(i,1) = nan; % phi1 cannot be computed
+        angle(i,1) = nan; % angle1 cannot be computed
         
-        % Calculate Dt, length, phi
+        % Calculate Dt, length, angle
         for j=2:size(meanTime,2) % All steps
             
             % Clear first measurement when new measurement of same subject begins
             % If current x_coord is less than the previous, it means that
             % the subject started from the beggining, so measurements for
-            % Dt, length and phi are not valid
+            % Dt, length and angle are not valid
             if x_coord(i,j) <= x_coord(i,j-1)
                Dt(i,j)=nan;
                len(i,j)=nan;
-               phi(i,j)=nan;
+               angle(i,j)=nan;
             else
                 % Calculate Dt
                 % t(j) : mean time of j step
@@ -62,7 +62,7 @@ function [X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coo
                 dx = x_coord(i,j)-x_coord(i,j-1);
                 dy = y_coord(i,j)-y_coord(i,j-1);
                 len(i,j) = sqrt(dx.^2 + dy.^2 );
-                phi(i,j) = atan2(dy,dx);
+                angle(i,j) = atan2(dy,dx);
             end
         end
      end
@@ -77,7 +77,7 @@ function [X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coo
         Dt (i, :) = Dt (i, I(i, :));
         meanF(i,:) = meanF(i, I(i,:));
         len(i,:) = len(i, I(i,:));
-        phi(i,:) = phi(i, I(i,:));
+        angle(i,:) = angle(i, I(i,:));
     end
        
     % Compute the X matrixes
@@ -86,7 +86,7 @@ function [X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coo
             X(j,1,i) = Dt(i,j);
             X(j,2,i) = meanF(i,j);
             X(j,3,i) = len(i,j);
-            X(j,4,i) = phi(i,j);
+            X(j,4,i) = angle(i,j);
         end
     end
 

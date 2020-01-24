@@ -3,6 +3,7 @@ clear all;
 close all;
 clc;
 
+%%
 %% Clear junk, retrieve force-time-position measurements and find meanF-Dt-length-angle for each step of each subject
 
 database=load('steps_database').database_passi;
@@ -11,26 +12,28 @@ database = clearDb(database);
 
 [time,force, x_coord, y_coord] = retrieveAllVariables(database);
 
-[X, Dt,meanF, len, phi] = computeAllDesiredVariables(force, time, x_coord, y_coord);
+[X, Dt,meanF, len, angle] = computeAllDesiredVariables(force, time, x_coord, y_coord);
 
 %% GMMs for each subject
 [GMModel, h] = fitGMMtoData(X, 5);
+[GMMAngle, h_angle] = fitGMMtoAngle(angle, 2);
 
 %% Simulator
 %% Generate random parameters for the GMM
-% Random Sigma
+%%% Random Sigma
 [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel);
 
-for i=1:length(GMModelSigma)
+for i=1:length(GMModelSigma)    % 1-6
     randomSigmaValues(i) = random(GMModelSigma{i},1);
 end
 
+% 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
 randomSigma = diag(randomSigmaValues(1:3));
 randomSigma(1,2) = randomSigmaValues(4); randomSigma(2,1) = randomSigmaValues(4);
 randomSigma(1,3) = randomSigmaValues(5); randomSigma(3,1) = randomSigmaValues(5);
 randomSigma(2,3) = randomSigmaValues(6); randomSigma(3,2) = randomSigmaValues(6);
 
-% Random w, mu
+%%% Random w, mu
 [GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, 1);
 
 for i=1:length(GM_s_weight_mat) % 1-5
@@ -38,11 +41,10 @@ for i=1:length(GM_s_weight_mat) % 1-5
     randomMuValues(i) = random(GM_s_mu_mat{i},1);
 end
 
-% Weight needs to sum to 1, so the gap to 1 will be equally distributed
-dif = (1-sum(randomWeightValues))/length(GM_s_weight_mat);
-randomWeight = randomWeightValues + dif;
+% Weight needs to sum to 1, so the values are normalised
+randomWeight = randomWeightValues./sum(randomWeightValues);
 
-% Random mu
+%%% Random mu
 randomMu(:, 1) = randomMuValues.';
 for variable=2:3
     [GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, variable);
@@ -53,12 +55,21 @@ for variable=2:3
 end
 
 %% Fit GMM to new parameters
+% Fit a GMM to the generated parameters
 simulatedGMM = gmdistribution(randomMu, randomSigma, randomWeight);
 
-generatedRandomWalk = random(simulatedGMM, 50);
+% Simulate a random walk
+RandomWalk = random(simulatedGMM, 50);
 
+% Calculate velocity and mean velocity
+velocity = RandomWalk(:,3)./RandomWalk(:,1);
+meanVel = mean(velocity).*(3.6); % km/h
 
+%% Scatter the random walk
+x0 = 0;
+y0 = 0;
 
+scatter(x0,y0,'.')
 
 %% Plotting GMM and data
 %% Time
