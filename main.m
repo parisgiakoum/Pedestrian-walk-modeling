@@ -15,13 +15,13 @@ database = clearDb(database);
 [X, Dt,meanF, len, angle] = computeAllDesiredVariables(force, time, x_coord, y_coord);
 
 %% GMMs for each subject
-[GMModel, h] = fitGMMtoData(X, 5);
-[GMMAngle, h_angle] = fitGMMtoAngle(angle, 2);
+[GMModel, h] = fitGMMtoData(X, 5, 'variables');
+[GMMAngle, h_angle] = fitGMMtoData(X, 3, 'angle');
 
 %% Simulator
-%% Generate random parameters for the GMM
+%% Generate random parameters for Dt, meanF, length
 %%% Random Sigma
-[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel);
+[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, 'variables');
 
 for i=1:length(GMModelSigma)    % 1-6
     randomSigmaValues(i) = random(GMModelSigma{i},1);
@@ -33,16 +33,17 @@ randomSigma(1,2) = randomSigmaValues(4); randomSigma(2,1) = randomSigmaValues(4)
 randomSigma(1,3) = randomSigmaValues(5); randomSigma(3,1) = randomSigmaValues(5);
 randomSigma(2,3) = randomSigmaValues(6); randomSigma(3,2) = randomSigmaValues(6);
 
+
 %%% Random w, mu
 [GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, 1);
 
 for i=1:length(GM_s_weight_mat) % 1-5
-    randomWeightValues(i) = random(GM_s_weight_mat{i},1);
+    randomWeight(i) = random(GM_s_weight_mat{i},1);
     randomMuValues(i) = random(GM_s_mu_mat{i},1);
 end
 
 % Weight needs to sum to 1, so the values are normalised
-randomWeight = randomWeightValues./sum(randomWeightValues);
+randomWeight = randomWeight./sum(randomWeight);
 
 %%% Random mu
 randomMu(:, 1) = randomMuValues.';
@@ -54,12 +55,28 @@ for variable=2:3
     randomMu(:, variable) = randomMuValues.';
 end
 
-%% Fit GMM to new parameters
+%% Generate random parameters for angle
+%%% Random Sigma
+[GMModelSigmaAngle, SigmaValuesAngle] = sigmaStatDescription(GMMAngle, 'angle');
+randomSigmaAngle = random(GMModelSigmaAngle, 1);
+
+%%% Random w, mu
+[GM_s_mu_mat_angle, GM_s_weight_mat_angle, s_mu_mat_angle, s_weight_mat_angle] = mu_weight_statDescription(GMMAngle, 4);
+for i=1:length(GM_s_weight_mat_angle) % 1-3
+    randomWeightAngle(i) = random(GM_s_weight_mat_angle{i},1);
+    randomMuAngle(i) = random(GM_s_mu_mat_angle{i},1);
+end
+randomWeightAngle = randomWeightAngle./sum(randomWeightAngle);
+randomMuAngle = randomMuAngle.';
+
+%% Extract a random walk
 % Fit a GMM to the generated parameters
 simulatedGMM = gmdistribution(randomMu, randomSigma, randomWeight);
+simulatedGMMAngle = gmdistribution(randomMuAngle, randomSigmaAngle, randomWeightAngle);
 
 % Simulate a random walk
 RandomWalk = random(simulatedGMM, 50);
+RandomWalk(:,4) = random(simulatedGMMAngle, 50);
 
 % Calculate velocity and mean velocity
 velocity = RandomWalk(:,3)./RandomWalk(:,1);

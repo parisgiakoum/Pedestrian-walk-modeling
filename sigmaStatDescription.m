@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% -- sigmaStatDescription(GMModel)
+% -- sigmaStatDescription(GMModel, mode)
 % Create a statistical description for Sigma (covariances)
 %
 % The covariances matrix is a 3x3 (as 3 are the variables) matrix with 6 
@@ -16,16 +16,33 @@
 % SigmaValues : 215x6 (subjects x significant values)
 % All significant values gathered by the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel)
+function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
 
-    % 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
-    SigmaValues = [diag(GMModel{1}.Sigma).'  GMModel{1}.Sigma(1,2)  GMModel{1}.Sigma(1,3)  GMModel{1}.Sigma(2,3)];
-    for i=2:length(GMModel) % 1-215
-       SigmaValues = [SigmaValues ; diag(GMModel{i}.Sigma).' GMModel{i}.Sigma(1,2)  GMModel{i}.Sigma(1,3)  GMModel{i}.Sigma(2,3)];
-    end
+    if strcmp(mode, 'variables')
+        
+        % 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
+        SigmaValues = [diag(GMModel{1}.Sigma).'  GMModel{1}.Sigma(1,2)  GMModel{1}.Sigma(1,3)  GMModel{1}.Sigma(2,3)];
+        for i=2:length(GMModel) % 1-215
+           SigmaValues = [SigmaValues ; diag(GMModel{i}.Sigma).' GMModel{i}.Sigma(1,2)  GMModel{i}.Sigma(1,3)  GMModel{i}.Sigma(2,3)];
+        end
 
-    for i=1:size(SigmaValues, 2) % 1-6
-        GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 4, 'SharedCovariance',true);
+        for i=1:size(SigmaValues, 2) % 1-6
+            GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 4, 'SharedCovariance',true);
+        end
+        
+    elseif strcmp(mode, 'angle')
+        
+        for i=1:length(GMModel) % 1-215
+            SigmaValues(i) = GMModel{i}.Sigma;
+        end
+        SigmaValues = SigmaValues.';
+        
+        GMModelSigma = fitgmdist (SigmaValues, 3, 'SharedCovariance',true);
+        
+    else
+        
+        error('Wrong input! Put either variables or angle');
+        
     end
     
 end

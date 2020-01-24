@@ -27,10 +27,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [GM_s_mu_mat, GM_s_weight_mat, s_mu_mat, s_weight_mat] = mu_weight_statDescription(GMModel, variable)
 
-    % Create matrixes
-    for i=1:length(GMModel) %1-215
-        mu_mat(i,:) = GMModel{i}.mu(:,variable);
-        weight_mat (i, :) = GMModel{i}.ComponentProportion;
+    if variable == 4    % angle
+        % Create matrixes
+        for i=1:length(GMModel) %1-215
+            mu_mat(i,:) = GMModel{i}.mu;
+            weight_mat (i, :) = GMModel{i}.ComponentProportion;
+        end
+    else
+        % Create matrixes
+        for i=1:length(GMModel) %1-215
+            mu_mat(i,:) = GMModel{i}.mu(:,variable);
+            weight_mat (i, :) = GMModel{i}.ComponentProportion;
+        end
     end
 
     % Sort mu_mat and fix index pairs for weight_mat
