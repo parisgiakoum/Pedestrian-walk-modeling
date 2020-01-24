@@ -1,5 +1,5 @@
 %% Init
-clear all;
+clear;
 close all;
 clc;
 
@@ -75,18 +75,43 @@ simulatedGMM = gmdistribution(randomMu, randomSigma, randomWeight);
 simulatedGMMAngle = gmdistribution(randomMuAngle, randomSigmaAngle, randomWeightAngle);
 
 % Simulate a random walk
-RandomWalk = random(simulatedGMM, 50);
-RandomWalk(:,4) = random(simulatedGMMAngle, 50);
+randomWalk = random(simulatedGMM, 25);
+randomWalk(:,4) = random(simulatedGMMAngle, 25);
 
 % Calculate velocity and mean velocity
-velocity = RandomWalk(:,3)./RandomWalk(:,1);
+velocity = randomWalk(:,3)./randomWalk(:,1);
 meanVel = mean(velocity).*(3.6); % km/h
 
-%% Scatter the random walk
-x0 = 0;
-y0 = 0;
 
-scatter(x0,y0,'.')
+%% Scatter the random walk positions
+% Plot data acquired by simulation
+dx = randomWalk(1,3).*cos(randomWalk(1,4));
+dy = randomWalk(:,3).*sin(randomWalk(:,4));
+for i=2:size(randomWalk , 1)
+    dx(i) = dx(i-1)+ randomWalk(i,3).*cos(randomWalk(i,4));
+end
+
+figure;
+plot(dx,dy,'--*','MarkerEdgeColor','k')
+%camroll(90)
+for k = 1: length (dx)
+    text (dx (k)+0.07, dy (k)+0.01, num2str (k), 'Color','r')
+end
+
+% Plot data from database to compare
+for i=1:13
+    if ~isempty(database{2,i})
+        xpos(i) = database{2,i}.x_step;
+        ypos(i) = database{2,i}.y_step;
+    end
+end
+
+figure;
+plot(xpos,ypos,'--*','MarkerEdgeColor','k')
+%camroll(90)
+for k = 1: length (xpos)
+    text (xpos (k)+0.07, ypos (k)+0.01, num2str (k), 'Color','r')
+end
 
 %% Plotting GMM and data
 %% Time
