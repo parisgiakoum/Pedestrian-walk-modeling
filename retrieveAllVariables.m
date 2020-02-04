@@ -4,11 +4,11 @@
 %
 %%% Returns %%%
 %%%
-% time : 67x32x215 (max measurements x steps x subjects
-% Times in which measurements occured(1st dim) for each step (2nd dim) and
+% time : 70x32x215 (max measurements x steps x subjects)
+% Times in which measurements occurred(1st dim) for each step (2nd dim) and
 % each subject (3rd dim).
 %%%
-% force: 67x32x215 (max measurements x steps x subjects)
+% force: 70x32x215 (max measurements x steps x subjects)
 % Force induced on each moment (1st dim) for each step (2nd dim) and each
 % subject (3rd dim).
 %%%

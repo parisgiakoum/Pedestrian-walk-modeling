@@ -12,7 +12,7 @@
 % length and 4th is the angle for the specific step (row)
 %%%
 % meanF : 215x32 (subjects x steps)
-% Mean force induced on esach step (col) for each subject (row)
+% Mean force induced on each step (col) for each subject (row)
 %%%
 % Dt: 215x32 (subjects x steps)
 % Interarrival time between each step (col) for each subject (row).
@@ -44,7 +44,7 @@ function [X, Dt,meanF, len, angle] = computeAllDesiredVariables(force, time, x_c
             % If current x_coord is less than the previous, it means that
             % the subject started from the beggining, so measurements for
             % Dt, length and angle are not valid
-            if x_coord(i,j) <= x_coord(i,j-1)
+            if x_coord(i,j) < x_coord(i,j-1)
                Dt(i,j)=nan;
                len(i,j)=nan;
                angle(i,j)=nan;
