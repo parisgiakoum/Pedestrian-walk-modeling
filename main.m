@@ -1,326 +1,296 @@
-%% Init
+%% Study, modeling and simulation of pedestrian walk with regard to the improvement of stability and comfort on walkways
+% Pavlos Paris Giakoumakis, Technical University of Crete
+% Implemented as a thesis project at University of Modena & Reggio Emilia
+% Final version : 11-Feb-2020
+%%%
+% The implemented code has been tested on MATLAB R2019b only and
+% requires the following files:
+%%%
+% main.m
+% steps_database.mat
+% clearDb.m
+% retrieveAllVairables.m
+% computeAllDesiredVariables.m
+% fitGMMtoData.m
+% mu_weight_statDescription.m
+% sigmaStatDescription.m
+% generateParameters.m
+%%% 
+% Initialisation
+
 clear;
 close all;
 clc;
 
-%%
+%% Basic functions
 %% Clear junk, retrieve force-time-position measurements and find meanF-Dt-length-angle for each step of each subject
 
-database=load('steps_database').database_passi;
+database=load('steps_database').database_passi; % load database
 
-database = clearDb(database);
+database = clearDb(database);   % Clear database
 
-[time,force, x_coord, y_coord] = retrieveAllVariables(database);
+[time,force, x_coord, y_coord] = retrieveAllVariables(database);    %  Retrieve forces, times and coordinates
 
-[X, Dt,meanF, len, angle] = computeAllDesiredVariables(force, time, x_coord, y_coord);
+[X, Dt, meanF, len, angle] = computeAllDesiredVariables(force, time, x_coord, y_coord);  % Extract Dt, meanf, len, angle
 
-%% GMMs for each subject
-[GMModel, h] = fitGMMtoData(X, 5, 'variables');
-[GMMAngle, h_angle] = fitGMMtoData(X, 3, 'angle');
+%% Modelisation of data
+% Fit GMMs on each person
+[GMModel, h] = fitGMMtoData(X, 5, 'variables'); % Dt, meanF, len
+[GMMAngle, h_angle] = fitGMMtoData(X, 3, 'angle');  % angle
+
+% Statistical description of parameters
+% Statistical description of mu and componentProportion
+[GM_s_mu_table, GM_s_weight_table, s_mu_table{1}, s_weight_table] = mu_weight_statDescription(GMModel, 1); % mu for Dt and comonentProportion
+[GM_s_mu_table_angle, GM_s_weight_table_angle, s_mu_table_angle, s_weight_table_angle] = mu_weight_statDescription(GMMAngle, 4);    % mu and componentProportion for angle
+% mu for meanF, len
+for variable=2:3
+    [GM_s_mu_table(variable, :), ~, s_mu_table{variable}, ~] = mu_weight_statDescription(GMModel, variable);
+end
+
+% Statistical description of Sigma
+[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, 'variables');   % Dt, meanF, len
+[GMModelSigmaAngle, SigmaValuesAngle] = sigmaStatDescription(GMMAngle, 'angle');    % angle
+
 
 %% Simulator
-%% Generate random parameters for Dt, meanF, length
-%%% Random Sigma
-[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, 'variables');
+% Generate random parameters for final GMMs
+[randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle, randomSigmaAngle] = generateParameters(GM_s_weight_table, GM_s_mu_table, GMModelSigma, GM_s_weight_table_angle, GM_s_mu_table_angle, GMModelSigmaAngle);
 
-% Generate random Sigma matrix until it is symmetric positive definite
-while 1
-    for i=1:length(GMModelSigma)    % 1-6
-        randomSigmaValues(i) = random(GMModelSigma{i},1);
-    end
-
-    % 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
-    randomSigma = diag(randomSigmaValues(1:3));
-    randomSigma(1,2) = randomSigmaValues(4); randomSigma(2,1) = randomSigmaValues(4);
-    randomSigma(1,3) = randomSigmaValues(5); randomSigma(3,1) = randomSigmaValues(5);
-    randomSigma(2,3) = randomSigmaValues(6); randomSigma(3,2) = randomSigmaValues(6);
-
-    [~,posdef] = chol(randomSigma); % posdef checks if randomSigma is a symmetric positive definite matrix
-    if posdef == 0
-        break;
-    end
-end
-
-%%% Random w, mu
-[GM_s_mu_table, GM_s_weight_table, s_mu_table, s_weight_table] = mu_weight_statDescription(GMModel, 1);
-
-for i=1:length(GM_s_weight_table) % 1-5
-    randomWeight(i) = random(GM_s_weight_table{i},1);
-    randomMuValues(i) = random(GM_s_mu_table{i},1);
-end
-
-% Weight needs to sum to 1, so the values are normalised
-randomWeight = randomWeight./sum(randomWeight);
-
-%%% Random mu
-randomMu(:, 1) = randomMuValues.';
-for variable=2:3
-    [GM_s_mu_table, GM_s_weight_table, s_mu_table, s_weight_table] = mu_weight_statDescription(GMModel, variable);
-    for i=1:length(GM_s_mu_table) % 1-5
-        randomMuValues(i) = random(GM_s_mu_table{i},1);
-    end
-    randomMu(:, variable) = randomMuValues.';
-end
-
-%% Generate random parameters for angle
-%%% Random Sigma
-[GMModelSigmaAngle, SigmaValuesAngle] = sigmaStatDescription(GMMAngle, 'angle');
-randomSigmaAngle = random(GMModelSigmaAngle, 1);
-
-%%% Random w, mu
-[GM_s_mu_table_angle, GM_s_weight_table_angle, s_mu_table_angle, s_weight_table_angle] = mu_weight_statDescription(GMMAngle, 4);
-for i=1:length(GM_s_weight_table_angle) % 1-3
-    randomWeightAngle(i) = random(GM_s_weight_table_angle{i},1);
-    randomMuAngle(i) = random(GM_s_mu_table_angle{i},1);
-end
-randomWeightAngle = randomWeightAngle./sum(randomWeightAngle);
-randomMuAngle = randomMuAngle.';
-
-%% Extract a random walk
+% Extract a random walk
 % Fit a GMM to the generated parameters
-simulatedGMM = gmdistribution(randomMu, randomSigma, randomWeight);
-simulatedGMMAngle = gmdistribution(randomMuAngle, randomSigmaAngle, randomWeightAngle);
-
-% Simulate a random walk
-randomWalk = random(simulatedGMM, 25);
-randomWalk(:,4) = random(simulatedGMMAngle, 25);
-
-% Calculate velocity and mean velocity
-velocity = randomWalk(:,3)./randomWalk(:,1);
-meanVel = mean(velocity).*(3.6); % km/h
-
-
-%%
-%% PLOTS
-%% Scatter the random walk positions
-% Plot data acquired by simulation
-dx = randomWalk(1,3).*cos(randomWalk(1,4));
-dy = randomWalk(:,3).*sin(randomWalk(:,4));
-for i=2:size(randomWalk , 1)
-    dx(i) = dx(i-1)+ randomWalk(i,3).*cos(randomWalk(i,4));
-end
-
-figure;
-plot(dx,dy,'--*','MarkerEdgeColor','k')
-%camroll(90)
-for k = 1: length (dx)
-    text (dx (k)+0.07, dy (k)+0.01, num2str (k), 'Color','r')
-end
-
-%% Scatter walk from database
-% Plot data from database to compare
-clear xpos ypos
-for i=1:3
-    if ~isempty(database{2,i})
-        xpos(i) = database{2,i}.x_step;
-        ypos(i) = database{2,i}.y_step;
-    end
-end
-
-figure;
-plot(xpos,ypos,'-or','MarkerEdgeColor','k')
-
-ylim([-0.2 0.2])
-xlim([0 2])
-xlabel('x_coord')
-ylabel('y\_coord')
-title('Calculation of length and angle')
-
-text (xpos (1), ypos (1)+0.04, num2str (1), 'Color','r')
-for k = 2: length (xpos)
-    line([xpos(k-1),xpos(k-1)], [ypos(k-1),ypos(k)], 'Color', 'm', 'LineWidth', 1, 'LineStyle', '--');
-    text (xpos(k-1)+0.01,ypos (k-1) + (ypos(k)-ypos(k-1))/2, strcat('x_',num2str(k-1),'_-_',num2str(k)), 'Color','m')
-    line([xpos(k-1),xpos(k)], [ypos(k-1),ypos(k-1)], 'Color', 'b', 'LineWidth', 1,  'LineStyle', '--');
-    text (xpos(k-1)+(xpos(k)-xpos(k-1))/2, ypos (k-1)+0.012, strcat('x_',num2str(k-1),'_-_',num2str(k)), 'Color','b')
+simulatedGMM = gmdistribution(randomMu, randomSigma, randomWeight); % Dt, meanF, len
+simulatedGMMAngle = gmdistribution(randomMuAngle, randomSigmaAngle, randomWeightAngle); % angle
     
-    if ypos(k) < ypos(k-1)
-        text (xpos (k), ypos (k)-0.04, num2str (k), 'Color','r')
-        text (xpos(k-1)+(xpos(k)-xpos(k-1))/2, ypos (k-1)+ (ypos(k)-ypos(k-1))/2 + 0.015, strcat('length_',num2str(k-1),'_-_',num2str(k)), 'Color','r')
-    else
-        text (xpos (k), ypos (k)+0.04, num2str (k), 'Color','r')
-        text (xpos(k-1)+(xpos(k)-xpos(k-1))/2, ypos (k-1)+ (ypos(k)-ypos(k-1))/2 - 0.015, strcat('length_',num2str(k-1),'_-_',num2str(k)), 'Color','r')
-    end
-end
+% Simulate a random walk
+n = 30; % number of steps
+randomWalk = random(simulatedGMM, n);   % Simulation of Dt, meanF, len
+randomWalk(:,4) = random(simulatedGMMAngle, n) % Simulation of angle
+
+% Calculate speed and mean speed
+speed = randomWalk(:,3)./randomWalk(:,1);
+meanSpeed = mean(speed).*(3.6) % km/h
 
 
-
-%% Plotting GMM and data
-%% 8 - Dt
-i=31;
-
-tempgm = gmdistribution(GMModel{i}.mu(:,1), GMModel{i}.Sigma(1), GMModel{i}.PComponents);
+%% Figures
+%% Plot force-time measurements of first 10 steps of of a random subject i in one plot
 figure;
-temp = X(:,1,i);
+i=randi([1,215]);   % random subject
+
+plot(time(:,1:10,i),force(:,1:10,i))
+xlabel('time');
+ylabel('force');
+
+
+%% fig. 10: GMM fitted on the interarrival time data of a random subject i
+i=randi([1,215]);   % random subject
+
+tempgm = gmdistribution(GMModel{i}.mu(:,1), GMModel{i}.Sigma(1), GMModel{i}.PComponents); % fit a GMM with parameters corresponding to Dt
+figure;
+temp = X(:,1,i);    % Dt data
 histogram (temp(~isnan(temp)), 'BinWidth', 0.02, 'BinLimits',[0,1.6], 'normalization' , 'pdf' );
 title('GMM fitted on Dt')
 xlabel('Dt Data')
 ylabel('Density')
 
+% Curve of GMM
 xgrid = linspace(0,1.6,1000)';
 hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 
-%% 9 - Mean Force
-i=1;
+%% fig. 11: GMM fitted on the mean force data of a random subject i
+i=randi([1,215]);   % random subject
 
-tempgm = gmdistribution(GMModel{i}.mu(:,2), GMModel{i}.Sigma(2,2), GMModel{i}.PComponents);
+tempgm = gmdistribution(GMModel{i}.mu(:,2), GMModel{i}.Sigma(2,2), GMModel{i}.PComponents); % fit a GMM with parameters corresponding to meanF
 figure;
-temp = X(:,2,i);
+temp = X(:,2,i);    % meanF data
 histogram (temp(~isnan(temp)), 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf' );
 title('GMM fitted on mean force')
 xlabel('meanF Data')
 ylabel('Density')
 
+% Curve of GMM
 xgrid = linspace(0,120,1000)';
 hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 
-%% 10 - Length
-i=20;
+%% fig 12: GMM fitted on the length of step data of a random subject
+i=randi([1,215]);  % random subject
 
-tempgm = gmdistribution(GMModel{i}.mu(:,3), GMModel{i}.Sigma(3,3), GMModel{i}.PComponents);
+tempgm = gmdistribution(GMModel{i}.mu(:,3), GMModel{i}.Sigma(3,3), GMModel{i}.PComponents); % fit a GMM with parameters corresponding to len
 figure;
-temp = X(:,3,i);
+temp = X(:,3,i);    % len data
 histogram (temp(~isnan(temp)), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
 title('GMM fitted on length of step')
 xlabel('Length Data')
 ylabel('Density')
 
+% Curve of GMM
 xgrid = linspace(0,1.7,1000)';
 hold on; plot(xgrid,pdf(tempgm,xgrid),'r-'); hold off
 
-
-%% Statistical description of mu, w, sigma & Plot GMM and data
-%% Sigma
-% 1-3 is the diagonal, 4 is 1-2, 5 is 1-3 and 6 is 2-3
-[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel);
-
-for i=1:size(SigmaValues, 2) % 1-6
-%   rand_sigma_val(:,i) = random(GMModelSigma{i},415);
-% 	h_sigma(i) = kstest2(SigmaValues(:,i),rand_sigma_val(:,i))
-
+%% fig. 15, 16, 17: GMMs fitted on mu for Dt, meanF, length
+% Plot gmm and data
+for variable = 1:3
     figure;
-    if i==1 | i==3 | i==5
+    for i=1:size(s_mu_table{variable},2)  % all components
+        subplot(3,2,i)
+        if (variable == 2)  % meanF
+            temp_mu_table = s_mu_table{variable};
+            histogram (temp_mu_table(:,i), 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf' );
+            title(strcat('GMM fitted on mu for component', {' '}, num2str(i),' - mean force variable'));
+            xlabel('mu data');
+            ylabel('Density');
+            
+            % Curve of GMM
+            xgrid = linspace(0,120,1000)';
+            hold on; plot(xgrid,pdf(GM_s_mu_table{variable,i},xgrid),'r-'); hold off
+        elseif  (variable == 3) % len
+            temp_mu_table = s_mu_table{variable};
+            histogram (temp_mu_table(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+            title(strcat('GMM fitted on mu for component', {' '} ,num2str(i),' - Length variable'));
+            xlabel('mu data');
+            ylabel('Density');
+            xgrid = linspace(0,1.8,1000)';
+            hold on; plot(xgrid,pdf(GM_s_mu_table{variable,i},xgrid),'r-'); hold off
+        else    % Dt
+            temp_mu_table = s_mu_table{variable};
+            histogram (temp_mu_table(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+            title(strcat('GMM fitted on mu for component', {' '} ,num2str(i),' - Dt variable'));
+            xlabel('mu data');
+            ylabel('Density');
+            xgrid = linspace(0,1.8,1000)';
+            hold on; plot(xgrid,pdf(GM_s_mu_table{variable,i},xgrid),'r-'); hold off
+        end
+    end
+end
+
+%% fig. 19: GMMs fitted on mixing probability (componentProportion) for Dt, meanF, length
+figure;
+for i=1:size(s_weight_table,2)  % all components
+    subplot(3,2,i)  
+    histogram (s_weight_table(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
+    title(strcat('GMM fitted on mixing probability for component', {' '}, num2str(i)));
+    xlabel('mixing probability');
+    ylabel('Density');
+    
+    % Curve of GMM
+    xgrid = linspace(0,1.8,1000)';
+    hold on; plot(xgrid,pdf(GM_s_weight_table{i},xgrid),'r-'); hold off
+end
+
+%% fig. 21 - GMM fitted on the differentiated values of Sigma for Dt, meanF, length
+
+figure;
+for i=1:size(SigmaValues, 2) % all differentiated values
+
+    subplot(3,2,i)
+    % The seperation in the if clause is for aesthetic purposes on diagrams
+    if i==1 | i==3 | i==5 
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
+        title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
+        xlabel('Data');
+        ylabel('Density');
         xgrid = linspace(-0.1,0.08,1000)';
         hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
     elseif i==2
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
+        title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
+        xlabel('Data');
+        ylabel('Density');
         xgrid = linspace(-0.1,20,1000)';
         hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
     else
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
+        title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
+        xlabel('Data');
+        ylabel('Density');
         xgrid = linspace(-0.35,0.5,1000)';
         hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
-    end
-    
+    end    
 end
 
-%% mu & weights
-% 1st approach
+%% fig. 22: GMM fitted on the angle data of a random subject
+i=randi([1,215]);  % random subject
 
-variable = 1;
-% Create vectors
-all_mu = GMModel{1}.mu(:,variable);
-all_weights =  GMModel{1}.ComponentProportion.';
-for i=2:length(GMModel) %2-215
-    all_mu = [all_mu ; GMModel{i}.mu(:,variable)];
-    all_weights = [all_weights ; GMModel{i}.ComponentProportion.'];
-end
-
-% Fit GMM to mu and weight arrays
-GM_all_mu = fitgmdist (all_mu, 3);
-% rand_all_mu = random(GM_all_mu,415);
-% h_all_mu = kstest2(all_mu,rand_all_mu)
-
-GM_all_weights = fitgmdist (all_weights,3);
-% rand_all_weights = random(GM_all_weights,415);
-% h_all_weights = kstest2(all_weights,rand_all_weights)
-
-% Plot gmm and data
 figure;
-if (variable == 2)
-    histogram (all_mu, 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf'  );
-    xgrid = linspace(0,120,1000)';
-    hold on; plot(xgrid,pdf(GM_all_mu,xgrid),'r-'); hold off
-    figure;
-    histogram (all_weights, 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf'  );
-    xgrid = linspace(-0.1,1.8,1000)';
-    hold on; plot(xgrid,pdf(GM_all_weights,xgrid),'r-'); hold off
-else
-    histogram (all_mu, 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
-    xgrid = linspace(0,1.8,1000)';
-    hold on; plot(xgrid,pdf(GM_all_mu,xgrid),'r-'); hold off
-    figure;
-    histogram (all_weights, 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
-    xgrid = linspace(-0.1,1.8,1000)';
-    hold on; plot(xgrid,pdf(GM_all_weights,xgrid),'r-'); hold off
+temp = X(:,4,i);    % angle data
+histogram (temp(~isnan(temp)), 'BinWidth', 0.03, 'BinLimits',[-0.25,0.25], 'normalization' , 'pdf' );
+title('GMM fitted on angle of step')
+xlabel('Angle Data')
+ylabel('Density')
+ylim([0 11])
+
+% Curve of GMM
+xgrid = linspace(-0.25,0.25,1000)';
+hold on; plot(xgrid,pdf(GMMAngle{i},xgrid),'r-'); hold off
+
+%% fig. 24: GMMs fitted on mu for angle
+figure;
+for i=1:size(s_mu_table_angle,2)  % all components
+    subplot(2,2,i)
+    histogram (s_mu_table_angle(:,i), 'BinWidth', 0.03, 'BinLimits',[-1.4,1.6], 'normalization' , 'pdf' );
+    title(strcat('GMM fitted on mu for component', {' '} ,num2str(i),' - angle variable'));
+    xlabel('mu data');
+    ylabel('Density');
+    xgrid = linspace(-1.4,1.6,1000)';
+    hold on; plot(xgrid,pdf(GM_s_mu_table_angle{i},xgrid),'r-'); hold off
 end
 
-%% 2nd approach
-% 14-
-variable = 1;
-[GM_s_mu_table, GM_s_weight_table, s_mu_table, s_weight_table] = mu_weight_statDescription(GMModel, variable);
+%% fig. 25: GMMs fitted on mixing probability (componentProportion) for angle
+figure;
+for i=1:size(s_weight_table_angle,2)  % all components
+    subplot(2,2,i)
+    histogram (s_weight_table_angle(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1], 'normalization' , 'pdf' );
+    title(strcat('GMM fitted on mixing probabilities for component', {' '} ,num2str(i),' - angle variable'));
+    xlabel('mu data');
+    ylabel('Density');
+    xgrid = linspace(0,1,1000)';
+    hold on; plot(xgrid,pdf(GM_s_weight_table_angle{i},xgrid),'r-'); hold off
+end
 
-% Plot gmm and data
-for i=1:size(s_mu_table,2)  %1-5
-    figure;
-    if (variable == 2)
-        histogram (s_mu_table(:,i), 'BinWidth', 2, 'BinLimits',[0 ,120], 'normalization' , 'pdf' );
-        title(strcat('GMM fitted on mu for component', {' '}, num2str(i),' - mean force variable'));
-        xlabel('mu data');
-        ylabel('Density');
-        xgrid = linspace(0,120,1000)';
-        hold on; plot(xgrid,pdf(GM_s_mu_table{i},xgrid),'r-'); hold off
-        
-        figure;
-        histogram (s_weight_table(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
-        title(strcat('GMM fitted on mixing probability for component', {' '}, num2str(i)));
-        xlabel('mixing probability');
-        ylabel('Density');
-        xgrid = linspace(0,1.8,1000)';
-        hold on; plot(xgrid,pdf(GM_s_weight_table{i},xgrid),'r-'); hold off
-    else
-        histogram (s_mu_table(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
-        title(strcat('GMM fitted on mu for component', {' '} ,num2str(i),' - Length variable'));
-        xlabel('mu data');
-        ylabel('Density');
-        xgrid = linspace(0,1.8,1000)';
-        hold on; plot(xgrid,pdf(GM_s_mu_table{i},xgrid),'r-'); hold off
-        
-        figure;
-        histogram (s_weight_table(:, i), 'BinWidth', 0.03, 'BinLimits',[0,1.7], 'normalization' , 'pdf' );
-        title(strcat('GMM fitted on mixing probability for component', {' '}, num2str(i)));
-        xlabel('mixing probability');
-        ylabel('Density');
-        xgrid = linspace(0,1.8,1000)';
-        hold on; plot(xgrid,pdf(GM_s_weight_table{i},xgrid),'r-'); hold off
+%% fig. 26: GMM fitted on Sigma of angle
+figure;
+histogram (SigmaValuesAngle, 'BinWidth', 0.002, 'BinLimits',[0,0.04], 'normalization' , 'pdf' );
+title(strcat('GMM fitted on Sigma - angle variable'));
+xlabel('Sigma data');
+ylabel('Density');
+xgrid = linspace(0,0.04,1000)';
+hold on; plot(xgrid,pdf(GMModelSigmaAngle,xgrid),'r-'); hold off
+
+%% fig 34: Scattering a random walk
+% Plot data acquired by simulation
+dx = randomWalk(:,3).*cos(randomWalk(1,4));
+dy = randomWalk(:,3).*sin(randomWalk(:,4));
+for i=2:size(randomWalk , 1)    % all simulated steps
+    dx(i) = dx(i-1)+ randomWalk(i,3).*cos(randomWalk(i,4));
+end
+
+figure;
+plot(dx,dy,'--*','MarkerEdgeColor','k')
+title('Scattering random walk');
+xlabel('x\_coord');
+ylabel('y\_coord');
+%camroll(90)    % a different view
+for k = 1: length (dx)
+    text (dx (k)+0.07, dy (k)+0.01, num2str (k), 'Color','r')
+end
+
+%% fig. 35: Scatter first 10 steps of a random subject from database
+% Plot data from database to compare
+clear xpos ypos
+% subj = 5; % subject of figure 9, 35 in the implementation report
+subj = randi([1,215]);  % random subject
+for i=1:10 % number of steps to scatter
+    if ~isempty(database{subj,i})
+        xpos(i) = database{subj,i}.x_step;
+        ypos(i) = database{subj,i}.y_step;
     end
 end
 
-
-%% First plots of data
-%% Plots
-% plot force-time measurements of a subject (j) in one plot
 figure;
-i=110;
-plot(time(:,:,i),force(:,:,i))
-%plot(time(:,10:15,i),force(:,10:15,i))
-xlabel('time');
-ylabel('force');
+plot(xpos,ypos,'--*','MarkerEdgeColor','k')
+title('Scattering walk');
+xlabel('x\_coord');
+ylabel('y\_coord');
 
-% plot all force-time measurements in one plot
-figure;
-for i=1:size(force,3) % All subjects
-    plot(time(:,:,i),force(:,:,i))
-    hold on
+for k = 1: length (xpos)
+    text (xpos (k), ypos (k)+0.01, num2str (k), 'Color','r')
 end
-xlabel('time');
-ylabel('force');
-hold off
-
-% Scatter diagram of meanF-Dt
-figure;
-for i=1
-plot(X(:,3,i),X(:,2,i),'.')
-hold on
-end
-hold off
