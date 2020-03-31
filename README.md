@@ -4,6 +4,7 @@ Diploma Thesis - Study, modeling and simulation of pedestrian walk with regard t
 This project was implemented in Department of Sciences and Methods for Engineering, University of Modena & Reggio Emilia (Italy) in cooperation with Technical University of Crete (Greece).
 
 Project supervisor: Dr. Fabrizio Pancaldi, Assistant Professor at University of Modena and Reggio Emilia
+
 Diploma thesis supervisor: Dr. Zervakis Michalis, Vice Rector and Professor at Technical University of Crete
 
 The completion of the thesis is still remaining due to the COVID-19 pandemic situation in Italy.
