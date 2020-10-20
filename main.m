@@ -70,7 +70,6 @@ randomWalk(:,4) = random(simulatedGMMAngle, n) % Simulation of angle
 speed = randomWalk(:,3)./randomWalk(:,1);
 meanSpeed = mean(speed).*(3.6) % km/h
 
-
 %% Figures
 %% Plot force-time measurements of first 10 steps of of a random subject i in one plot
 figure;
