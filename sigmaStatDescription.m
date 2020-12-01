@@ -37,7 +37,7 @@ function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
         end
         SigmaValues = SigmaValues.';
         
-        GMModelSigma = fitgmdist (SigmaValues, 3, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
+        GMModelSigma = fitgmdist (SigmaValues, 2, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
         
     else
         

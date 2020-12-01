@@ -45,13 +45,13 @@ function [GM_s_mu_table, GM_s_weight_table, s_mu_table, s_weight_table] = mu_wei
     [s_mu_table s_mu_idx] = sort(mu_table,2);
     % Keep same index for weights
     for i=1:size(weight_table, 1) %1-215
-        for j=1:size(weight_table, 2) %1-5
+        for j=1:size(weight_table, 2)
             s_weight_table(i,j) = weight_table(i,s_mu_idx(i,j));
         end
     end
 
     % Fit GMM to mu and weight matrixes
-    for i=1:size(s_mu_table,2)    %1-5
+    for i=1:size(s_mu_table,2)   
         GM_s_mu_table{i} = fitgmdist (s_mu_table(:,i) , 3, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
         GM_s_weight_table{i} = fitgmdist (s_weight_table(:,i) , 3, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
     end
