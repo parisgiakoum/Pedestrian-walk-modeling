@@ -26,7 +26,7 @@ function [GMModel, h] = fitGMMtoData(X, components, mode)
             temp = X(:,1:3,i);
 
             % GM model fitting on the 3 variables for each subject
-            GMModel{i} = fitgmdist (temp(any(~isnan(temp), 2), :), components, 'SharedCovariance',true);
+            GMModel{i} = fitgmdist (temp(any(~isnan(temp), 2), :), components, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
 
             % Kolmogorov-Smirnov tests
             % Generate random sample based on the GMM
@@ -54,7 +54,7 @@ function [GMModel, h] = fitGMMtoData(X, components, mode)
             temp = X(:,4,i);
 
             % GM model fitting on the angle for each subject
-            GMModel{i} = fitgmdist (temp(~isnan(temp)), components, 'SharedCovariance',true);
+            GMModel{i} = fitgmdist (temp(~isnan(temp)), components, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
 
             % Kolmogorov-Smirnov tests
             % Generate random sample based on the GMM

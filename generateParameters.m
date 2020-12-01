@@ -32,8 +32,16 @@ function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle,
     % Generate random parameters for Dt, meanF, length
     %%% Random componentProportion, mu
     for i=1:length(GM_s_weight_table) % 1-5
-        randomWeight(i) = random(GM_s_weight_table{i},1);
-        randomMuValues(i) = random(GM_s_mu_table{i},1);
+        while 1
+            tempWeight = random(GM_s_weight_table{i},1);
+            if tempWeight < 0
+                tempWeight = random(GM_s_weight_table{i},1);
+            else
+                randomWeight(i) = tempWeight;
+                break;
+            end
+        end
+        randomMuValues(i) = random(GM_s_mu_table{1,i},1);
     end
 
     % Weight needs to sum to 1, so the values are normalised
@@ -44,7 +52,7 @@ function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle,
     for variable=2:3
         
         for i=1:length(GM_s_mu_table) % 1-5
-            randomMuValues(i) = random(GM_s_mu_table{i},1);
+            randomMuValues(i) = random(GM_s_mu_table{variable,i},1);
         end
         randomMu(:, variable) = randomMuValues.';
     end
@@ -72,13 +80,26 @@ function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle,
     % Generate random parameters for angle
     %%% Random w, mu
     for i=1:length(GM_s_weight_table_angle) % 1-3
-        randomWeightAngle(i) = random(GM_s_weight_table_angle{i},1);
+        while 1
+            tempWeight = random(GM_s_weight_table_angle{i},1);
+            if tempWeight < 0
+                tempWeight = random(GM_s_weight_table_angle{i},1);
+            else
+                randomWeightAngle(i) = tempWeight;
+                break;
+            end
+        end
         randomMuAngle(i) = random(GM_s_mu_table_angle{i},1);
     end
     randomWeightAngle = randomWeightAngle./sum(randomWeightAngle);
     randomMuAngle = randomMuAngle.';
 
     %%% Random Sigma
-    randomSigmaAngle = random(GMModelSigmaAngle, 1);
-    
+    while 1
+        randomSigmaAngle = random(GMModelSigmaAngle, 1);
+        [~,posdef] = chol(randomSigmaAngle); % posdef checks if randomSigma is a symmetric positive definite matrix
+        if posdef == 0
+            break;
+        end
+    end
 end
