@@ -203,21 +203,21 @@ for i=1:size(SigmaValues, 2) % all differentiated values
         title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
         xlabel('Data');
         ylabel('Density');
-        xgrid = linspace(-0.1,0.16,1000)';
+        xgrid = linspace(-0.05,0.16,1000)';
         hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
     elseif i==2
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
         title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
         xlabel('Data');
         ylabel('Density');
-        xgrid = linspace(-0.1,20,1000)';
+        xgrid = linspace(-20,100,1000)';
         hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
     else
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
         title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
         xlabel('Data');
         ylabel('Density');
-        xgrid = linspace(-0.35,0.5,1000)';
+        xgrid = linspace(-2,2,1000)';
         hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
     end    
 end
@@ -267,7 +267,7 @@ histogram (SigmaValuesAngle, 'BinWidth', 0.002, 'BinLimits',[0,0.04], 'normaliza
 title(strcat('GMM fitted on Sigma - angle variable'));
 xlabel('Sigma data');
 ylabel('Density');
-xgrid = linspace(0,0.04,1000)';
+xgrid = linspace(-0,0.04,1000)';
 hold on; plot(xgrid,pdf(GMModelSigmaAngle,xgrid),'r-'); hold off
 
 %% fig 34: Scattering a random walk

@@ -27,7 +27,7 @@ function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
         end
 
         for i=1:size(SigmaValues, 2) % 1-6
-            GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 4, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
+            GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 2, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
         end
         
     elseif strcmp(mode, 'angle')
