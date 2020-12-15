@@ -16,7 +16,7 @@
 % SigmaValues : 215x6 (subjects x significant values)
 % All significant values gathered by the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
+function [nd_Sigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
 
     if strcmp(mode, 'variables')
         
@@ -27,7 +27,7 @@ function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
         end
 
         for i=1:size(SigmaValues, 2) % 1-6
-            GMModelSigma{i} = fitgmdist (SigmaValues(:,i), 2, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
+            nd_Sigma{i} = fitdist(SigmaValues(:,i),'Normal');
         end
         
     elseif strcmp(mode, 'angle')
@@ -37,7 +37,7 @@ function [GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, mode)
         end
         SigmaValues = SigmaValues.';
         
-        GMModelSigma = fitgmdist (SigmaValues, 2, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
+        nd_Sigma = fitdist(SigmaValues,'Normal');
         
     else
         

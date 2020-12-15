@@ -41,21 +41,20 @@ database = clearDb(database);   % Clear database
 
 % Statistical description of parameters
 % Statistical description of mu and componentProportion
-[GM_s_mu_table, GM_s_weight_table, s_mu_table{1}, s_weight_table] = mu_weight_statDescription(GMModel, 1); % mu for Dt and comonentProportion
-[GM_s_mu_table_angle, GM_s_weight_table_angle, s_mu_table_angle, s_weight_table_angle] = mu_weight_statDescription(GMMAngle, 4);    % mu and componentProportion for angle
+[nd_s_mu_table, nd_s_weight_table, s_mu_table{1}, s_weight_table] = mu_weight_statDescription(GMModel, 1); % mu for Dt and comonentProportion
+[nd_s_mu_table_angle, nd_s_weight_table_angle, s_mu_table_angle, s_weight_table_angle] = mu_weight_statDescription(GMMAngle, 4);    % mu and componentProportion for angle
 % mu for meanF, len
 for variable=2:3
-    [GM_s_mu_table(variable, :), ~, s_mu_table{variable}, ~] = mu_weight_statDescription(GMModel, variable);
+    [nd_s_mu_table(variable, :), ~, s_mu_table{variable}, ~] = mu_weight_statDescription(GMModel, variable);
 end
 
 % Statistical description of Sigma
-[GMModelSigma, SigmaValues] = sigmaStatDescription(GMModel, 'variables');   % Dt, meanF, len
-[GMModelSigmaAngle, SigmaValuesAngle] = sigmaStatDescription(GMMAngle, 'angle');    % angle
-
+[nd_Sigma, SigmaValues] = sigmaStatDescription(GMModel, 'variables');   % Dt, meanF, len
+[nd_SigmaAngle, SigmaValuesAngle] = sigmaStatDescription(GMMAngle, 'angle');    % angle
 
 %% Simulator
 % Generate random parameters for final GMMs
-[randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle, randomSigmaAngle] = generateParameters(GM_s_weight_table, GM_s_mu_table, GMModelSigma, GM_s_weight_table_angle, GM_s_mu_table_angle, GMModelSigmaAngle);
+[randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle, randomSigmaAngle] = generateParameters(nd_s_weight_table, nd_s_mu_table, nd_Sigma, nd_s_weight_table_angle, nd_s_mu_table_angle, nd_SigmaAngle);
 
 % Extract a random walk
 % Fit a GMM to the generated parameters
@@ -204,21 +203,21 @@ for i=1:size(SigmaValues, 2) % all differentiated values
         xlabel('Data');
         ylabel('Density');
         xgrid = linspace(-0.05,0.16,1000)';
-        hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
+        hold on; plot(xgrid,pdf(nd_Sigma{i},xgrid),'r-'); hold off
     elseif i==2
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
         title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
         xlabel('Data');
         ylabel('Density');
         xgrid = linspace(-20,100,1000)';
-        hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
+        hold on; plot(xgrid,pdf(nd_Sigma{i},xgrid),'r-'); hold off
     else
         histogram (SigmaValues(:,i), 'normalization' , 'pdf'  );
         title(strcat('GMM fitted on differentiated value', {' '}, num2str(i)))
         xlabel('Data');
         ylabel('Density');
         xgrid = linspace(-2,2,1000)';
-        hold on; plot(xgrid,pdf(GMModelSigma{i},xgrid),'r-'); hold off
+        hold on; plot(xgrid,pdf(nd_Sigma{i},xgrid),'r-'); hold off
     end    
 end
 
@@ -240,25 +239,25 @@ hold on; plot(xgrid,pdf(GMMAngle{i},xgrid),'r-'); hold off
 %% fig. 24: GMMs fitted on mu for angle
 figure;
 for i=1:size(s_mu_table_angle,2)  % all components
-    subplot(2,2,i)
+    subplot(2,1,i)
     histogram (s_mu_table_angle(:,i), 'BinWidth', 0.03, 'BinLimits',[-1.4,1.6], 'normalization' , 'pdf' );
     title(strcat('GMM fitted on mu for component', {' '} ,num2str(i),' - angle variable'));
     xlabel('mu data');
     ylabel('Density');
     xgrid = linspace(-1.4,1.6,1000)';
-    hold on; plot(xgrid,pdf(GM_s_mu_table_angle{i},xgrid),'r-'); hold off
+    hold on; plot(xgrid,pdf(nd_s_mu_table_angle{i},xgrid),'r-'); hold off
 end
 
 %% fig. 25: GMMs fitted on mixing probability (componentProportion) for angle
 figure;
 for i=1:size(s_weight_table_angle,2)  % all components
-    subplot(2,2,i)
+    subplot(2,1,i)
     histogram (s_weight_table_angle(:,i), 'BinWidth', 0.03, 'BinLimits',[0,1], 'normalization' , 'pdf' );
     title(strcat('GMM fitted on mixing probabilities for component', {' '} ,num2str(i),' - angle variable'));
     xlabel('mu data');
     ylabel('Density');
     xgrid = linspace(0,1,1000)';
-    hold on; plot(xgrid,pdf(GM_s_weight_table_angle{i},xgrid),'r-'); hold off
+    hold on; plot(xgrid,pdf(nd_s_weight_table_angle{i},xgrid),'r-'); hold off
 end
 
 %% fig. 26: GMM fitted on Sigma of angle
@@ -268,7 +267,7 @@ title(strcat('GMM fitted on Sigma - angle variable'));
 xlabel('Sigma data');
 ylabel('Density');
 xgrid = linspace(-0,0.04,1000)';
-hold on; plot(xgrid,pdf(GMModelSigmaAngle,xgrid),'r-'); hold off
+hold on; plot(xgrid,pdf(nd_SigmaAngle,xgrid),'r-'); hold off
 
 %% fig 34: Scattering a random walk
 % Plot data acquired by simulation

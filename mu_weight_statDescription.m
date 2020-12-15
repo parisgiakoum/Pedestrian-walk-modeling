@@ -25,7 +25,7 @@
 % s_weight_table : 215x5 (subjects x components)
 % All mixing proportions values gathered by the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [GM_s_mu_table, GM_s_weight_table, s_mu_table, s_weight_table] = mu_weight_statDescription(GMModel, variable)
+function [nd_s_mu_table, nd_s_weight_table, s_mu_table, s_weight_table] = mu_weight_statDescription(GMModel, variable)
 
     if variable == 4    % angle
         % Create matrixes
@@ -52,8 +52,8 @@ function [GM_s_mu_table, GM_s_weight_table, s_mu_table, s_weight_table] = mu_wei
 
     % Fit GMM to mu and weight matrixes
     for i=1:size(s_mu_table,2)   
-        GM_s_mu_table{i} = fitgmdist (s_mu_table(:,i) , 3, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
-        GM_s_weight_table{i} = fitgmdist (s_weight_table(:,i) , 3, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
+        nd_s_mu_table{i} = fitdist(s_mu_table(:,i),'Normal');
+        nd_s_weight_table{i} = fitdist(s_weight_table(:,i),'Normal')
     end
     
 end
