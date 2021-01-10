@@ -4,17 +4,21 @@ Diploma Thesis - Study and modeling of pedestrian walk with regard to the improv
 A part of this project was implemented in Department of Sciences and Methods for Engineering, University of Modena & Reggio Emilia (Italy) in cooperation with Technical University of Crete (Greece).
 
 # Committee:
-Project supervisors: Assistant Professor Fabrizio Pancaldi, Assistant Professor at University of Modena and Reggio Emilia (UNIMORE)
-Diploma thesis supervisor: Professor Zervakis Michalis, Vice Rector and Professor at Technical University of Crete
-Member od the committee: Professor George Karystinos, Professor at Technical University of Crete
+- Project supervisor: Assistant Professor Fabrizio Pancaldi, Assistant Professor at University of Modena and Reggio Emilia (UNIMORE)
+
+- Diploma thesis supervisor: Professor Zervakis Michalis, Vice Rector and Professor at Technical University of Crete
+
+- Member of the committee: Professor George Karystinos, Professor at Technical University of Crete
 
 # Abstract:
 The static stability of footbridges or pedestrian walkways can be effectively assessed through several approaches developed in the fields of mechanical and civil engineering. On the other hand, the dynamic stability of pedestrian walkways represents an underexplored field and only in the last 2 years, the comfort of such structures has been investigated. A walkway under the tendency to oscillate, provokes panic and insecurity of the users and needs to be appropriately addressed in order to guarantee the safety of pedestrians.
+
 In this thesis, we introduce an innovative algorithm for modeling and simulation of human walk using Gaussian Mixture Models. Our model satisfies the requirements of simplicity, ease of use by engineers and is suitable to accurately assess the dynamic stability of walkways. Furthermore, we implement a simulator that can be used to provide reliable prediction and assessment of floor vibrations under human actions. Evaluation results are promising, showing that our simulator is capable of supplementing the experimental procedure in future research.
 
 # The repository contains:
-Pedestrian_walk_modeling.pdf: The diploma thesis report - Read this for more information.
-Implemented code and important files.
+- Pedestrian_walk_modeling.pdf: The diploma thesis report - Read this for more information.
+
+- Implemented code and important files.
 
 # Note:
 MATLAB R2019b Update 4 was used for the development and testing of the implemented code. MATLAB is also required for the execution.
