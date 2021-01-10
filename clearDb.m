@@ -4,7 +4,7 @@
 %
 %%% Returns %%%
 %%%
-% database : 210x32 (subjects x steps) cells
+% database : subjects x steps
 % The new database - clear of junk
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function database = clearDb(database)

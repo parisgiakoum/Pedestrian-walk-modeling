@@ -1,26 +1,26 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % -- computeAllDesiredVariables(force, time, x_coord, y_coord)
-% Compute interarrival time between one step and the next, mean force
+% Compute interarrival time between one step and the next, mean vertical force
 % induced, length and angle for each step - Clear wrong values
 %
 %%% Returns %%%
 %%%
-% X: 32x4x215 (steps x Dt-MeanF-length-angle x subjects)
+% X: steps x Dt-MeanF-length-angle x subjects
 % Mean force, interarrival time, length and angle of each step for each
 % person in one matrix. For each person(represented in the 3rd dimension),
 % 1st column represents the Dt, 2nd column is the meanF, 3rd column is the
 % length and 4th is the angle for the specific step (row)
 %%%
-% meanF : 215x32 (subjects x steps)
+% meanF : subjects x steps
 % Mean force induced on each step (col) for each subject (row)
 %%%
-% Dt: 215x32 (subjects x steps)
+% Dt: subjects x steps
 % Interarrival time between each step (col) for each subject (row).
 %%%
-% len: 215x32 (subjects x steps)
+% len: subjects x steps
 % The euclidian distance between both hills (two points) on each step
 %%%
-% angle: 215x32 (subjects x steps)
+% angle: subjects x steps
 % The angle of each step along the gait horizontal direction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [X, Dt,meanF, len, angle] = computeAllDesiredVariables(force, time, x_coord, y_coord)

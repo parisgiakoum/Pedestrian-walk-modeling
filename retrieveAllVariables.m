@@ -4,18 +4,18 @@
 %
 %%% Returns %%%
 %%%
-% time : 70x32x215 (max measurements x steps x subjects)
+% time : max measurements x steps x subjects
 % Times in which measurements occurred(1st dim) for each step (2nd dim) and
 % each subject (3rd dim).
 %%%
-% force: 70x32x215 (max measurements x steps x subjects)
+% force: max measurements x steps x subjects
 % Force induced on each moment (1st dim) for each step (2nd dim) and each
 % subject (3rd dim).
 %%%
-% x_coord: 215x32 (subjects x steps)
+% x_coord: subjects x steps
 % The step coordinates in x axis for all subjects(rows) and steps (col)
 %%%
-% y_coord: 215x32 (subjects x steps)
+% y_coord: subjects x steps
 % The step coordinates in y axis for all subjects(rows) and steps (col)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

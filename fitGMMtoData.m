@@ -2,23 +2,15 @@
 % -- fitGMMtoData(X, components, mode)
 % Fit GMMs to data
 %
-% Fit a gaussian mixture model to each subject's data and perform
-% Two-sample Kolmogorov-Smirnov tests to determine if the distributions
-% describe the data
+% Fit a gaussian mixture model to each subject's data
 %
 %%% Returns %%%
 %%%
-% GMModel: 1x215 (subjects)
+% GMModel: subjects
 % GMM for each subject fitted on the data for Dt-meanF-length (3 varibles -
 % components determined by the variable components)
-%%%
-% h : 1/3x215 (variables x subjects)
-% All results of Two-sample Kolmogorov-Smirnov tests for each variable
-% (row). If the result is 0, then the test is a success, thus the GMM
-% fitted to data describes the data accurately (5% significance level is
-% applied)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [GMModel, h] = fitGMMtoData(X, components, mode)
+function GMModel = fitGMMtoData(X, components, mode)
 
     if strcmp(mode, 'variables')
         for i=1:size(X,3)   % All subjects
@@ -28,26 +20,8 @@ function [GMModel, h] = fitGMMtoData(X, components, mode)
             % GM model fitting on the 3 variables for each subject
             GMModel{i} = fitgmdist (temp(any(~isnan(temp), 2), :), components, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
 
-            % Kolmogorov-Smirnov tests
-            % Generate random sample based on the GMM
-            Y = random(GMModel{i},415);
-
-            T = X(:,1,i);
-            F = X(:,2,i);
-            L = X(:,3,i);
-            TSim=Y(:,1);             
-            FSim=Y(:,2);
-            LSim=Y(:,3);
-
-            % Perform the test using the randomly generated data to determine
-            % if they belong to the same distribution as the original
-            h1(i)=kstest2(T,TSim);
-            h2(i)=kstest2(F,FSim);
-            h3(i)=kstest2(L,LSim);
         end
 
-        % h will hold the results for all 3 tests
-        h=[h1; h2; h3];
     elseif strcmp(mode, 'angle')
 
         for i=1:size(X,3)   % All subjects
@@ -56,13 +30,6 @@ function [GMModel, h] = fitGMMtoData(X, components, mode)
             % GM model fitting on the angle for each subject
             GMModel{i} = fitgmdist (temp(~isnan(temp)), components, 'Options', statset('MaxIter', 1500), 'SharedCovariance',true);
 
-            % Kolmogorov-Smirnov tests
-            % Generate random sample based on the GMM
-            Y = random(GMModel{i},415);
-
-            % Perform the test using the randomly generated data to determine
-            % if they belong to the same distribution as the original
-            h(i)=kstest2(temp(~isnan(temp)),Y);
         end
         
     else

@@ -1,47 +1,47 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% -- generateParameters(GM_s_weight_table, GM_s_mu_table, GMModelSigma, GM_s_weight_table_angle, GM_s_mu_table_angle, GMModelSigmaAngle)
-% Extract a random set of parameters to use in the GMM of the simulator
+% -- generateParameters(nd_s_weight_table, nd_s_mu_table, nd_Sigma, nd_s_weight_table_angle, nd_s_mu_table_angle, nd_SigmaAngle)
+% Extract a random set of parameters to use in simulator's GMM
 %
-% Takes the GMMs of each parameter as input (for angle and all the other
-% variables seperately) and gives the parameters of the final GMM as output
+% Takes the Gaussians of each parameter as input and estimates the
+% parameters of the final GMM in the output
 %
 %%% Returns %%%
 %%%
-% randomWeight : 1x5 (components of final GMM for Dt, meanF, len)
-% Mixing probabilities (componentProportion) of each component in the final
-% GMM for Dt, meanF, len
+% randomWeight : components of final GMM for Dt, meanF, len
+% Mixing probabilities Component Proportion Coefficients of each component 
+% in the final GMM for Dt, meanF, len
 %%%
-% randomMu : 5x3 (components of final GMM for Dt, meanF, len x variables (Dt, meanF, len))
+% randomMu : components of final GMM for Dt, meanF, len x variables (Dt, meanF, len)
 % Mean table of the final GMM for Dt, meanF, len
 %%%
-% randomSigma :  3x3 (variables (Dt, meanF, len) x variables (Dt, meanF, len))
+% randomSigma :  variables (Dt, meanF, len) x variables (Dt, meanF, len)
 % Covariance matrix (Sigma) of the final GMM for Dt, meanF, len
 %%%
-% randomWeightAngle : 1x3 (components of final GMM for angle)
+% randomWeightAngle : components of final GMM for angle
 % Mixing probabilities (componentProportion) of each component in the final
 % GMM for angle
 %%%
-% randomMuAngle : 3x1 (components of final GMM for angle x variables (angle))
+% randomMuAngle : components of final GMM for angle x variables (angle)
 % Mean table of the final GMM for angle
 %%%
-% randomSigmaAngle :  val (variable (angle))
+% randomSigmaAngle :  variable (angle)
 % Variance (Sigma) of the final GMM for angle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle, randomSigmaAngle] = generateParameters(GM_s_weight_table, GM_s_mu_table, GMModelSigma, GM_s_weight_table_angle, GM_s_mu_table_angle, GMModelSigmaAngle)
+function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle, randomSigmaAngle] = generateParameters(nd_s_weight_table, nd_s_mu_table, nd_Sigma, nd_s_weight_table_angle, nd_s_mu_table_angle, nd_SigmaAngle)
 
     % Generate random parameters for Dt, meanF, length
     %%% Random componentProportion, mu
-    for i=1:length(GM_s_weight_table) % 1-5
+    for i=1:length(nd_s_weight_table) % 1-5
         while 1
-            tempWeight = random(GM_s_weight_table{i},1);
+            tempWeight = random(nd_s_weight_table{i},1);
             if tempWeight < 0
-                tempWeight = random(GM_s_weight_table{i},1);
+                tempWeight = random(nd_s_weight_table{i},1);
             else
                 randomWeight(i) = tempWeight;
                 break;
             end
         end
-        randomMuValues(i) = random(GM_s_mu_table{1,i},1);
+        randomMuValues(i) = random(nd_s_mu_table{1,i},1);
     end
 
     % Weight needs to sum to 1, so the values are normalised
@@ -51,8 +51,8 @@ function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle,
     randomMu(:, 1) = randomMuValues.';
     for variable=2:3
         
-        for i=1:length(GM_s_mu_table) % 1-5
-            randomMuValues(i) = random(GM_s_mu_table{variable,i},1);
+        for i=1:length(nd_s_mu_table) % 1-5
+            randomMuValues(i) = random(nd_s_mu_table{variable,i},1);
         end
         randomMu(:, variable) = randomMuValues.';
     end
@@ -60,8 +60,8 @@ function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle,
     %%% Random Sigma
     % Generate random Sigma matrix until it is symmetric positive definite
     while 1
-        for i=1:length(GMModelSigma)    % 1-6
-            randomSigmaValues(i) = random(GMModelSigma{i},1);
+        for i=1:length(nd_Sigma)    % 1-6
+            randomSigmaValues(i) = random(nd_Sigma{i},1);
         end
 
         % 1-3 is the diagonal variances, 4 is 1-2 covariance, 5 is 1-3
@@ -79,24 +79,24 @@ function [randomWeight, randomMu, randomSigma, randomWeightAngle, randomMuAngle,
 
     % Generate random parameters for angle
     %%% Random w, mu
-    for i=1:length(GM_s_weight_table_angle) % 1-3
+    for i=1:length(nd_s_weight_table_angle) % 1-3
         while 1
-            tempWeight = random(GM_s_weight_table_angle{i},1);
+            tempWeight = random(nd_s_weight_table_angle{i},1);
             if tempWeight < 0
-                tempWeight = random(GM_s_weight_table_angle{i},1);
+                tempWeight = random(nd_s_weight_table_angle{i},1);
             else
                 randomWeightAngle(i) = tempWeight;
                 break;
             end
         end
-        randomMuAngle(i) = random(GM_s_mu_table_angle{i},1);
+        randomMuAngle(i) = random(nd_s_mu_table_angle{i},1);
     end
     randomWeightAngle = randomWeightAngle./sum(randomWeightAngle);
     randomMuAngle = randomMuAngle.';
 
     %%% Random Sigma
     while 1
-        randomSigmaAngle = random(GMModelSigmaAngle, 1);
+        randomSigmaAngle = random(nd_SigmaAngle, 1);
         [~,posdef] = chol(randomSigmaAngle); % posdef checks if randomSigma is a symmetric positive definite matrix
         if posdef == 0
             break;

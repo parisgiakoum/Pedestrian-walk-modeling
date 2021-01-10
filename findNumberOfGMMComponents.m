@@ -1,12 +1,16 @@
-%% Find the optimal number of GMM components for the modelisation of experimental walk
+%%
+% Find the optimal number of GMM components for the modelisation of experimental walk
+%
+% The lowest pointy in the score differential diagram indicates the
+% selected number of components
+%
+% The problem is identified at: https://towardsdatascience.com/gaussian-mixture-model-clusterization-how-to-select-the-number-of-components-clusters-553bef45f6e4
+%%%
 %% Initialisation
 %%
 clear;
 close all;
 clc;
-
-% Basic functions
-% Clear junk, retrieve force-time-position measurements and find meanF-Dt-length-angle for each step of each subject
 
 database=load('steps_database').database_passi; % load database
 
@@ -18,10 +22,9 @@ database = clearDb(database);   % Clear database
 
 clear database time force x_coord y_coord;
 
-%% Dt, meanF, length
+%% Multivariate GMM
 
 %% Single subject
-% The problem is identified at: https://towardsdatascience.com/gaussian-mixture-model-clusterization-how-to-select-the-number-of-components-clusters-553bef45f6e4
 subj = randi(125);    % random subject
 maxComp = 15;   % maximum components
 tries = 20;
@@ -50,7 +53,7 @@ title(t,'GMMs fitted on a random pedestrian')
 xlabel(t, 'Components')
 ylabel(t, 'AIC/BIC')
 
-% Plot mean AIC/BIC
+% Plot mean index evaluation diagram
 meanBIC = sum(BIC,1)/tries;
 meanAIC = sum(AIC,1)/tries;
 figure;
@@ -63,7 +66,7 @@ plot(meanAIC, 'o-', 'DisplayName','AIC')
 hold off;
 lgd = legend;
 
-% Plot AIC/BIC intervals
+% Plot socre differentials
 dBIC = diff(meanBIC);
 dAIC = diff(meanAIC);
 figure;
@@ -76,7 +79,7 @@ plot([dAIC(1) dAIC], 'o-', 'DisplayName','AIC')
 hold off;
 lgd = legend;
 
-%% 2nd option: Put all steps from many experiments into one
+%% 2nd option: Put all steps into a unified walk table
 
 % Xtotal is a matrix with all steps performed
 temp = X(:,1:3,1);
@@ -110,7 +113,7 @@ title(t,'GMMs fitted on the unified table')
 xlabel(t, 'Components')
 ylabel(t, 'AIC/BIC')
 
-% Plot mean AIC/BIC
+% Plot mean index evaluation diagram
 meanBIC = sum(BIC,1)/tries;
 meanAIC = sum(AIC,1)/tries;
 figure;
@@ -123,7 +126,7 @@ plot(meanAIC, 'o-', 'DisplayName','AIC')
 hold off;
 lgd = legend;
 
-% Plot AIC/BIC intervals
+% Plot socre differentials
 dBIC = diff(meanBIC);
 dAIC = diff(meanAIC);
 figure;
@@ -165,7 +168,7 @@ title(t,'GMMs fitted on a random pedestrian')
 xlabel(t, 'Components')
 ylabel(t, 'AIC/BIC')
 
-% Plot mean AIC/BIC
+% Plot mean index evaluation diagram
 meanBIC = sum(BIC,1)/tries;
 meanAIC = sum(AIC,1)/tries;
 figure;
